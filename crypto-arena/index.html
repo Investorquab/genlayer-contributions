@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Crypto Arena — BTC Prediction Battle</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:    #060a0e;
+  --bg2:   #0b1017;
+  --bg3:   #101820;
+  --bg4:   #141f2a;
+  --green: #00ff88;
+  --red:   #ff3355;
+  --gold:  #ffd700;
+  --blue:  #00aaff;
+  --dim:   #1a2535;
+  --border:#1e2d3d;
+  --text:  #c9d1d9;
+  --sub:   #6e7f8d;
+  --muted: #2a3a4a;
+  --fm:    'Barlow Condensed',sans-serif;
+  --mono:  'Share Tech Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--fm);background:var(--bg);color:var(--text);}
+
+/* SCANLINES */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);}
+
+/* ── SCREENS ── */
+.screen{display:none;height:100vh;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ══ LOBBY SCREEN ══════════════════════════════ */
+#screenLobby{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,255,136,0.04) 0%,transparent 70%);}
+
+.lobby-logo{text-align:center;margin-bottom:40px;}
+.ll-title{font-family:var(--mono);font-size:2.2rem;color:var(--green);letter-spacing:4px;
+  text-shadow:0 0 30px rgba(0,255,136,0.4);}
+.ll-sub{font-size:.9rem;color:var(--sub);letter-spacing:3px;margin-top:6px;text-transform:uppercase;}
+
+.lobby-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:32px;width:100%;max-width:420px;}
+
+.lc-section{margin-bottom:24px;}
+.lc-label{font-family:var(--mono);font-size:.65rem;color:var(--sub);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;display:block;}
+
+.lc-inp{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;
+  padding:11px 14px;font-family:var(--mono);font-size:.85rem;color:var(--text);outline:none;
+  transition:border-color .2s;}
+.lc-inp:focus{border-color:var(--green);}
+.lc-inp.code{text-transform:uppercase;letter-spacing:4px;font-size:1.1rem;text-align:center;}
+
+.lc-contract{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-family:var(--mono);font-size:.7rem;color:var(--text);outline:none;
+  transition:border-color .2s;margin-bottom:8px;}
+.lc-contract:focus{border-color:var(--green);}
+
+.btn-primary{width:100%;padding:13px;border-radius:10px;font-family:var(--mono);font-size:.85rem;
+  font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .2s;border:none;
+  text-transform:uppercase;}
+.btn-green{background:var(--green);color:var(--bg);box-shadow:0 4px 20px rgba(0,255,136,0.25);}
+.btn-green:hover{opacity:.85;box-shadow:0 4px 30px rgba(0,255,136,0.4);}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--sub);}
+.btn-outline:hover{border-color:var(--green);color:var(--green);}
+
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+.div-line{flex:1;height:1px;background:var(--border);}
+.div-txt{font-family:var(--mono);font-size:.62rem;color:var(--muted);}
+
+.err-msg{font-family:var(--mono);font-size:.68rem;color:var(--red);margin-top:8px;display:none;}
+
+/* ══ WAITING ROOM ══════════════════════════════ */
+#screenWaiting{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 60% 40% at 50% 30%,rgba(0,170,255,0.04) 0%,transparent 70%);}
+
+.waiting-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:28px;width:100%;max-width:480px;}
+
+.wc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.wc-code{font-family:var(--mono);font-size:1.8rem;color:var(--gold);letter-spacing:6px;
+  text-shadow:0 0 20px rgba(255,215,0,0.3);}
+.wc-tag{font-family:var(--mono);font-size:.6rem;color:var(--sub);}
+
+.player-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.slot{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+  display:flex;align-items:center;gap:8px;}
+.slot.filled{border-color:rgba(0,255,136,0.3);}
+.slot-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.slot.filled .slot-dot{background:var(--green);box-shadow:0 0 6px var(--green);}
+.slot-name{font-family:var(--mono);font-size:.75rem;color:var(--sub);}
+.slot.filled .slot-name{color:var(--text);}
+.slot-host{font-size:.55rem;color:var(--gold);margin-left:auto;}
+
+.wc-info{font-family:var(--mono);font-size:.68rem;color:var(--sub);text-align:center;margin-bottom:16px;}
+.wc-rules{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;
+  margin-bottom:16px;}
+.wr-title{font-family:var(--mono);font-size:.6rem;color:var(--sub);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;}
+.wr-item{font-family:var(--mono);font-size:.7rem;color:var(--text);margin-bottom:4px;}
+.wr-item span{color:var(--green);}
+.wr-item span.red{color:var(--red);}
+
+/* ══ GAME SCREEN ════════════════════════════════ */
+#screenGame{flex-direction:column;height:100vh;overflow:hidden;}
+
+.game-topbar{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
+.gtb-left{display:flex;align-items:center;gap:16px;}
+.gtb-room{font-family:var(--mono);font-size:.68rem;color:var(--gold);}
+.gtb-round{font-family:var(--mono);font-size:.68rem;color:var(--sub);}
+.gtb-price{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--green);}
+.gtb-price.down{color:var(--red);}
+.gtb-right{display:flex;align-items:center;gap:12px;}
+.gtb-phase{font-family:var(--mono);font-size:.68rem;padding:3px 10px;border-radius:4px;}
+.gtb-phase.betting{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
+.gtb-phase.watching{background:rgba(0,170,255,0.1);border:1px solid rgba(0,170,255,0.3);color:var(--blue);}
+.gtb-phase.result{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+.gtb-phase.lobby,.gtb-phase.waiting{background:rgba(110,127,141,0.1);border:1px solid var(--border);color:var(--sub);}
+.gtb-timer{font-family:var(--mono);font-size:1.1rem;color:var(--red);min-width:28px;text-align:right;}
+
+.game-body{display:grid;grid-template-columns:1fr 280px;flex:1;overflow:hidden;}
+
+/* LEFT — chart + betting */
+.game-left{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);}
+
+/* CHART */
+.chart-area{flex:1;padding:12px;position:relative;min-height:0;}
+.chart-title{font-family:var(--mono);font-size:.6rem;color:var(--sub);letter-spacing:2px;margin-bottom:6px;
+  display:flex;justify-content:space-between;}
+.chart-canvas-wrap{position:relative;width:100%;height:calc(100% - 22px);}
+canvas#chart{width:100%;height:100%;display:block;}
+
+/* BET PANEL */
+.bet-panel{padding:12px 16px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
+.bp-row{display:flex;gap:10px;align-items:center;}
+.bp-info{flex:1;}
+.bp-label{font-family:var(--mono);font-size:.6rem;color:var(--sub);letter-spacing:2px;text-transform:uppercase;}
+.bp-status{font-family:var(--mono);font-size:.8rem;color:var(--text);margin-top:2px;}
+.bp-status.locked{color:var(--gold);}
+.bp-status.correct{color:var(--green);}
+.bp-status.wrong{color:var(--red);}
+.bet-btns{display:flex;gap:8px;}
+.btn-buy,.btn-sell{padding:10px 24px;border-radius:8px;font-family:var(--mono);font-size:.82rem;
+  font-weight:700;cursor:pointer;border:none;letter-spacing:1px;transition:all .15s;}
+.btn-buy{background:rgba(0,255,136,0.15);border:1.5px solid var(--green);color:var(--green);}
+.btn-buy:hover:not(:disabled){background:rgba(0,255,136,0.25);box-shadow:0 0 16px rgba(0,255,136,0.3);}
+.btn-sell{background:rgba(255,51,85,0.15);border:1.5px solid var(--red);color:var(--red);}
+.btn-sell:hover:not(:disabled){background:rgba(255,51,85,0.25);box-shadow:0 0 16px rgba(255,51,85,0.3);}
+.btn-buy:disabled,.btn-sell:disabled{opacity:.3;cursor:not-allowed;}
+.bet-locked-badge{display:none;align-items:center;gap:8px;padding:10px 16px;
+  background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:8px;}
+.blb-txt{font-family:var(--mono);font-size:.75rem;color:var(--gold);}
+
+/* RIGHT — players + chat */
+.game-right{display:flex;flex-direction:column;overflow:hidden;}
+
+/* PLAYERS */
+.players-panel{padding:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pp-title{font-family:var(--mono);font-size:.58rem;color:var(--sub);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;}
+.player-list{display:flex;flex-direction:column;gap:5px;}
+.pl-item{display:flex;align-items:center;gap:8px;padding:6px 8px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;}
+.pl-item.me{border-color:rgba(0,255,136,0.3);}
+.pl-item.eliminated{opacity:.4;}
+.pl-hearts{font-size:.7rem;flex-shrink:0;min-width:24px;}
+.pl-name{font-family:var(--mono);font-size:.72rem;color:var(--text);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pl-name.me{color:var(--green);}
+.pl-pts{font-family:var(--mono);font-size:.65rem;color:var(--sub);}
+.pl-bet{font-family:var(--mono);font-size:.62rem;margin-left:auto;flex-shrink:0;}
+.pl-bet.buy{color:var(--green);}
+.pl-bet.sell{color:var(--red);}
+.pl-bet.locked{color:var(--gold);}
+
+/* CHAT */
+.chat-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.chat-title{font-family:var(--mono);font-size:.58rem;color:var(--sub);letter-spacing:2px;
+  text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.chat-msgs{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--dim);}
+.cm-item{font-family:var(--mono);font-size:.68rem;line-height:1.4;}
+.cm-name{color:var(--blue);}
+.cm-name.me{color:var(--green);}
+.cm-sys{color:var(--sub);font-style:italic;}
+.chat-input-row{display:flex;gap:6px;padding:8px;border-top:1px solid var(--border);flex-shrink:0;}
+.chat-inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;font-family:var(--mono);font-size:.72rem;color:var(--text);outline:none;}
+.chat-inp:focus{border-color:var(--green);}
+.chat-send{padding:7px 12px;background:var(--dim);border:1px solid var(--border);border-radius:6px;
+  color:var(--sub);font-family:var(--mono);font-size:.7rem;cursor:pointer;}
+.chat-send:hover{border-color:var(--green);color:var(--green);}
+
+/* RESULT OVERLAY */
+.result-overlay{display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(6,10,14,0.92);align-items:center;justify-content:center;}
+.result-overlay.show{display:flex;}
+.ro-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:32px;text-align:center;max-width:400px;width:90%;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.ro-icon{font-size:3rem;margin-bottom:12px;}
+.ro-title{font-family:var(--mono);font-size:1.3rem;font-weight:700;margin-bottom:6px;}
+.ro-title.bull{color:var(--green);}
+.ro-title.bear{color:var(--red);}
+.ro-sub{font-family:var(--mono);font-size:.72rem;color:var(--sub);margin-bottom:16px;line-height:1.6;}
+.ro-price-row{display:flex;justify-content:center;gap:24px;margin-bottom:16px;}
+.ro-pr{text-align:center;}
+.ro-pr-lbl{font-family:var(--mono);font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:1px;}
+.ro-pr-val{font-family:var(--mono);font-size:.9rem;color:var(--text);margin-top:3px;}
+.ro-next{font-family:var(--mono);font-size:.68rem;color:var(--sub);}
+
+/* WINNER OVERLAY */
+.winner-overlay{display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(6,10,14,0.95);align-items:center;justify-content:center;flex-direction:column;}
+.winner-overlay.show{display:flex;}
+.wo-title{font-family:var(--mono);font-size:3rem;color:var(--gold);
+  text-shadow:0 0 40px rgba(255,215,0,0.5);margin-bottom:8px;animation:glow 1.5s ease-in-out infinite;}
+@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,215,0,0.3)} 50%{text-shadow:0 0 60px rgba(255,215,0,0.8)}}
+.wo-name{font-family:var(--mono);font-size:1.5rem;color:var(--text);margin-bottom:4px;}
+.wo-chain{font-family:var(--mono);font-size:.7rem;color:var(--green);margin-bottom:24px;}
+.wo-lb{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:20px;min-width:300px;margin-bottom:20px;}
+.wo-lb-title{font-family:var(--mono);font-size:.62rem;color:var(--sub);letter-spacing:2px;margin-bottom:12px;}
+.wo-lb-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:6px 8px;
+  background:var(--bg3);border-radius:6px;}
+.wo-rank{font-family:var(--mono);font-size:.7rem;color:var(--sub);min-width:20px;}
+.wo-pname{font-family:var(--mono);font-size:.78rem;color:var(--text);flex:1;}
+.wo-pts{font-family:var(--mono);font-size:.75rem;color:var(--green);}
+.wo-chain-hash{font-family:var(--mono);font-size:.6rem;color:var(--sub);word-break:break-all;
+  max-width:320px;text-align:center;margin-bottom:16px;}
+.btn-play-again{padding:12px 32px;background:var(--green);color:var(--bg);border:none;
+  border-radius:10px;font-family:var(--mono);font-size:.82rem;font-weight:700;
+  letter-spacing:2px;cursor:pointer;text-transform:uppercase;}
+
+/* TOAST */
+#toasts{position:fixed;top:60px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:6px;}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:8px 14px;font-family:var(--mono);font-size:.7rem;
+  animation:tIn .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.toast.ok{border-left:3px solid var(--green);color:var(--green);}
+.toast.err{border-left:3px solid var(--red);color:var(--red);}
+.toast.info{border-left:3px solid var(--blue);color:var(--blue);}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<!-- ══ LOBBY SCREEN ══════════════════════════════ -->
+<div id="screenLobby" class="screen active">
+  <div class="lobby-logo">
+    <div class="ll-title">⬡ CRYPTO ARENA</div>
+    <div class="ll-sub">BTC Prediction Battle · Powered by GenLayer</div>
+  </div>
+  <div class="lobby-card">
+    <div class="lc-section">
+      <label class="lc-label">Your Name</label>
+      <input class="lc-inp" id="playerName" placeholder="Enter your name..." maxlength="20"/>
+    </div>
+    <div class="lc-section">
+      <label class="lc-label">Contract Address (optional)</label>
+      <input class="lc-contract" id="contractAddr" placeholder="0x... GenLayer contract for on-chain recording"/>
+    </div>
+    <button class="btn-primary btn-green" onclick="createRoom()">⚡ CREATE ROOM</button>
+    <div class="divider"><div class="div-line"></div><div class="div-txt">OR JOIN EXISTING</div><div class="div-line"></div></div>
+    <div class="lc-section">
+      <label class="lc-label">Room Code</label>
+      <input class="lc-inp code" id="roomCode" placeholder="XXXX" maxlength="4"/>
+    </div>
+    <button class="btn-primary btn-outline" onclick="joinRoom()">→ JOIN ROOM</button>
+    <div class="err-msg" id="lobbyErr">Room not found or already started</div>
+  </div>
+</div>
+
+<!-- ══ WAITING ROOM ══════════════════════════════ -->
+<div id="screenWaiting" class="screen">
+  <div class="waiting-card">
+    <div class="wc-header">
+      <div>
+        <div style="font-family:var(--mono);font-size:.58rem;color:var(--sub);letter-spacing:2px;margin-bottom:4px">ROOM CODE</div>
+        <div class="wc-code" id="waitCode">----</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--mono);font-size:.58rem;color:var(--sub);margin-bottom:4px">PLAYERS</div>
+        <div style="font-family:var(--mono);font-size:1.2rem;color:var(--text)" id="waitCount">1/8</div>
+      </div>
+    </div>
+
+    <div class="player-slots" id="waitSlots"></div>
+
+    <div class="wc-rules">
+      <div class="wr-title">Rules</div>
+      <div class="wr-item">🟡 <span>7 seconds</span> to place your BET or SELL bet</div>
+      <div class="wr-item">📊 <span>15 seconds</span> watching BTC live price</div>
+      <div class="wr-item">✅ Correct call: <span>+20 pts</span></div>
+      <div class="wr-item">❌ Wrong call: <span class="red">-30 pts, lose ❤️</span></div>
+      <div class="wr-item">💀 Lose <span>2 lives</span> = eliminated</div>
+      <div class="wr-item">🏆 Last one standing <span>wins & recorded on-chain!</span></div>
+    </div>
+
+    <div class="wc-info" id="waitInfo">Waiting for players... Share the room code!</div>
+    <button class="btn-primary btn-green" id="btnStart" onclick="startGame()" style="display:none">
+      ⚡ START GAME
+    </button>
+    <button class="btn-primary btn-outline" id="btnWaiting" disabled style="margin-top:8px">
+      Waiting for host to start...
+    </button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ════════════════════════════════ -->
+<div id="screenGame" class="screen">
+  <div class="game-topbar">
+    <div class="gtb-left">
+      <div class="gtb-room">⬡ <span id="tbRoom">----</span></div>
+      <div class="gtb-round">ROUND <span id="tbRound">0</span></div>
+      <div class="gtb-price" id="tbPrice">$--,---</div>
+    </div>
+    <div class="gtb-right">
+      <div class="gtb-phase lobby" id="tbPhase">LOBBY</div>
+      <div class="gtb-timer" id="tbTimer">--</div>
+    </div>
+  </div>
+
+  <div class="game-body">
+    <!-- LEFT -->
+    <div class="game-left">
+      <div class="chart-area">
+        <div class="chart-title">
+          <span>BTC / USDT — LIVE</span>
+          <span id="chartDiff" style="color:var(--sub)">waiting...</span>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+
+      <div class="bet-panel">
+        <div class="bp-row">
+          <div class="bp-info">
+            <div class="bp-label">Your Bet</div>
+            <div class="bp-status" id="bpStatus">Wait for round to start</div>
+          </div>
+          <div class="bet-btns" id="betBtns">
+            <button class="btn-buy" id="btnBuy" onclick="placeBet('BUY')" disabled>▲ BUY</button>
+            <button class="btn-sell" id="btnSell" onclick="placeBet('SELL')" disabled>▼ SELL</button>
+          </div>
+          <div class="bet-locked-badge" id="betLockedBadge">
+            <span class="blb-txt" id="blbTxt">🔒 BET LOCKED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="game-right">
+      <div class="players-panel">
+        <div class="pp-title">Players</div>
+        <div class="player-list" id="playerList"></div>
+      </div>
+      <div class="chat-panel">
+        <div class="chat-title">Live Chat</div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-input-row">
+          <input class="chat-inp" id="chatInp" placeholder="Say something..." maxlength="120"
+            onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="ro-card">
+    <div class="ro-icon" id="roIcon">📊</div>
+    <div class="ro-title" id="roTitle">—</div>
+    <div class="ro-sub" id="roSub">—</div>
+    <div class="ro-price-row">
+      <div class="ro-pr">
+        <div class="ro-pr-lbl">Start Price</div>
+        <div class="ro-pr-val" id="roStart">—</div>
+      </div>
+      <div class="ro-pr">
+        <div class="ro-pr-lbl">End Price</div>
+        <div class="ro-pr-val" id="roEnd">—</div>
+      </div>
+      <div class="ro-pr">
+        <div class="ro-pr-lbl">Change</div>
+        <div class="ro-pr-val" id="roDiff">—</div>
+      </div>
+    </div>
+    <div class="ro-next" id="roNext">Next round in 5s...</div>
+  </div>
+</div>
+
+<!-- WINNER OVERLAY -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="wo-title">🏆 WINNER</div>
+  <div class="wo-name" id="woName">—</div>
+  <div class="wo-chain" id="woChain">Recorded on GenLayer ✓</div>
+  <div class="wo-lb">
+    <div class="wo-lb-title">Final Leaderboard</div>
+    <div id="woLbList"></div>
+  </div>
+  <div class="wo-chain-hash" id="woHash"></div>
+  <button class="btn-play-again" onclick="playAgain()">⚡ PLAY AGAIN</button>
+</div>
+
+<script>
+const BACKEND_WS  = window.BACKEND_WS  || 'ws://localhost:3006';
+const BACKEND_URL = window.BACKEND_URL || 'http://localhost:3006';
+
+let ws = null;
+let myId = null;
+let myName = '';
+let isHost = false;
+let roomCode = '';
+let gamePhase = 'lobby';
+let myBet = null;
+let betLocked = false;
+let currentRound = 0;
+let timerInterval = null;
+let timerSecs = 0;
+let startPriceForRound = 0;
+
+// ── CHART ──────────────────────────────────────
+const canvas = document.getElementById('chart');
+const ctx    = canvas.getContext('2d');
+let priceHistory = [];
+let btcPrice = 0;
+let lastBtcPrice = 0;
+
+function resizeChart() {
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  drawChart();
+}
+window.addEventListener('resize', resizeChart);
+
+function drawChart() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const pts = priceHistory.slice(-60);
+  if (pts.length < 2) {
+    ctx.fillStyle = '#2a3a4a';
+    ctx.font = '12px Share Tech Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('Waiting for price data...', W/2, H/2);
+    return;
+  }
+
+  const prices  = pts.map(p => p.price);
+  const minP    = Math.min(...prices);
+  const maxP    = Math.max(...prices);
+  const range   = maxP - minP || 1;
+  const pad     = { top: 20, bottom: 30, left: 10, right: 70 };
+  const cW      = W - pad.left - pad.right;
+  const cH      = H - pad.top - pad.bottom;
+
+  const toX = i => pad.left + (i / (pts.length - 1)) * cW;
+  const toY = p => pad.top + (1 - (p - minP) / range) * cH;
+
+  // Round start line
+  if (gamePhase === 'watching' || gamePhase === 'betting') {
+    const startIdx = pts.findIndex(p => p.price === startPriceForRound);
+    if (startIdx >= 0) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.moveTo(toX(startIdx), pad.top);
+      ctx.lineTo(toX(startIdx), H - pad.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  // Grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * cH;
+    ctx.beginPath();
+    ctx.strokeStyle = '#1e2d3d';
+    ctx.lineWidth = 1;
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+    const labelPrice = maxP - (i / 4) * range;
+    ctx.fillStyle = '#6e7f8d';
+    ctx.font = '10px Share Tech Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('$' + labelPrice.toFixed(0), W - pad.right + 4, y + 4);
+  }
+
+  // Price line
+  const isUp = prices[prices.length-1] >= prices[0];
+  const lineColor = isUp ? '#00ff88' : '#ff3355';
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(pts[0].price));
+  pts.forEach((p, i) => ctx.lineTo(toX(i), toY(p.price)));
+  ctx.lineTo(toX(pts.length-1), H - pad.bottom);
+  ctx.lineTo(toX(0), H - pad.bottom);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+  grad.addColorStop(0, isUp ? 'rgba(0,255,136,0.2)' : 'rgba(255,51,85,0.2)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(toX(i), toY(p.price)) : ctx.lineTo(toX(i), toY(p.price)));
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  // Last price dot
+  const lastX = toX(pts.length - 1);
+  const lastY = toY(pts[pts.length - 1].price);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+  ctx.strokeStyle = lineColor + '44';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ── WEBSOCKET ──────────────────────────────────
+function connect(onOpen) {
+  ws = new WebSocket(BACKEND_WS);
+  ws.onopen = () => { console.log('✅ WS connected'); if (onOpen) onOpen(); };
+  ws.onmessage = e => handleMsg(JSON.parse(e.data));
+  ws.onclose = () => {
+    console.log('WS closed');
+    setTimeout(() => connect(), 3000);
+  };
+  ws.onerror = e => console.log('WS error', e);
+}
+
+function wsSend(msg) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+}
+
+function handleMsg(msg) {
+  switch(msg.type) {
+
+    case 'price_update':
+      lastBtcPrice = btcPrice;
+      btcPrice = msg.price;
+      if (msg.history) priceHistory = msg.history;
+      updatePriceDisplay();
+      drawChart();
+      break;
+
+    case 'room_created':
+      myId = msg.playerId;
+      roomCode = msg.code;
+      isHost = true;
+      showWaiting(msg.state);
+      break;
+
+    case 'room_joined':
+      myId = msg.playerId;
+      roomCode = msg.code;
+      isHost = false;
+      showWaiting(msg.state);
+      break;
+
+    case 'player_joined':
+      toast(msg.name + ' joined!', 'info');
+      updateWaiting(msg.state);
+      break;
+
+    case 'player_left':
+      toast(msg.name + ' left', 'info');
+      if (msg.state) updatePlayers(msg.state.players);
+      break;
+
+    case 'game_starting':
+      showGame(msg.state);
+      addSysChat('🚀 Game starting!');
+      break;
+
+    case 'round_start':
+      currentRound = msg.round;
+      startPriceForRound = msg.start_price;
+      gamePhase = 'betting';
+      myBet = null;
+      betLocked = false;
+      updatePhase('betting');
+      updateRound(msg.round);
+      showBetButtons(true);
+      startTimer(msg.bet_secs, 'Place your bet!');
+      updatePlayers(msg.state.players);
+      addSysChat(`⚡ Round ${msg.round} — BTC @ $${msg.start_price.toFixed(2)} — BUY or SELL?`);
+      hideResultOverlay();
+      break;
+
+    case 'bets_locked':
+      gamePhase = 'watching';
+      updatePhase('watching');
+      showBetButtons(false);
+      startTimer(msg.watch_secs, 'Watching price...');
+      addSysChat(`👀 Bets locked! Started @ $${msg.start_price.toFixed(2)} — watching 15s`);
+      updatePlayers(msg.state.players);
+      break;
+
+    case 'bet_confirmed':
+      myBet = msg.bet;
+      betLocked = true;
+      showLockedBadge(msg.bet);
+      updatePlayers(msg.state.players);
+      break;
+
+    case 'player_bet':
+      updatePlayers(msg.state.players);
+      break;
+
+    case 'round_result':
+      gamePhase = 'result';
+      updatePhase('result');
+      clearCountdown();
+      showResult(msg);
+      updatePlayers(msg.state.players);
+      addSysChat(`📊 BTC went ${msg.went}! ${msg.diff >= 0 ? '+' : ''}$${msg.diff.toFixed(2)}`);
+      break;
+
+    case 'game_ended':
+      clearCountdown();
+      hideResultOverlay();
+      showWinner(msg);
+      break;
+
+    case 'chat':
+      addChat(msg.name, msg.text, msg.name === myName);
+      break;
+
+    case 'error':
+      toast(msg.message, 'err');
+      document.getElementById('lobbyErr').style.display = 'block';
+      document.getElementById('lobbyErr').textContent = msg.message;
+      break;
+  }
+}
+
+// ── SCREENS ───────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showWaiting(state) {
+  showScreen('screenWaiting');
+  document.getElementById('waitCode').textContent = state.code;
+  updateWaiting(state);
+}
+
+function updateWaiting(state) {
+  const players = state.players;
+  document.getElementById('waitCount').textContent = players.length + '/8';
+
+  const slots = document.getElementById('waitSlots');
+  let html = '';
+  for (let i = 0; i < 8; i++) {
+    const p = players[i];
+    if (p) {
+      html += `<div class="slot filled">
+        <div class="slot-dot"></div>
+        <div class="slot-name">${p.name}</div>
+        ${p.isHost ? '<div class="slot-host">HOST</div>' : ''}
+      </div>`;
+    } else {
+      html += `<div class="slot"><div class="slot-dot"></div><div class="slot-name" style="color:var(--muted)">waiting...</div></div>`;
+    }
+  }
+  slots.innerHTML = html;
+
+  if (isHost) {
+    document.getElementById('btnStart').style.display = 'block';
+    document.getElementById('btnWaiting').style.display = 'none';
+    document.getElementById('waitInfo').textContent = players.length >= 2
+      ? `${players.length} players ready — click Start!`
+      : 'Need at least 2 players to start';
+  } else {
+    document.getElementById('btnStart').style.display = 'none';
+    document.getElementById('btnWaiting').style.display = 'block';
+    document.getElementById('waitInfo').textContent = 'Waiting for host to start the game...';
+  }
+}
+
+function showGame(state) {
+  showScreen('screenGame');
+  document.getElementById('tbRoom').textContent = state.code;
+  updatePlayers(state.players);
+  resizeChart();
+}
+
+// ── GAME UI ───────────────────────────────────
+function updatePriceDisplay() {
+  const el   = document.getElementById('tbPrice');
+  const isUp = btcPrice >= lastBtcPrice;
+  el.textContent = '$' + btcPrice.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  el.className   = 'gtb-price' + (isUp ? '' : ' down');
+
+  if (gamePhase === 'watching' && startPriceForRound > 0) {
+    const diff = btcPrice - startPriceForRound;
+    const pct  = (diff / startPriceForRound * 100).toFixed(3);
+    const el2  = document.getElementById('chartDiff');
+    el2.textContent = (diff >= 0 ? '+' : '') + '$' + diff.toFixed(2) + ' (' + pct + '%)';
+    el2.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+function updatePhase(phase) {
+  gamePhase = phase;
+  const el = document.getElementById('tbPhase');
+  const labels = { betting:'🟡 BETTING', watching:'👀 WATCHING', result:'📊 RESULT', lobby:'⏳ LOBBY', ended:'🏁 ENDED' };
+  el.textContent = labels[phase] || phase.toUpperCase();
+  el.className   = 'gtb-phase ' + phase;
+}
+
+function updateRound(r) {
+  document.getElementById('tbRound').textContent = r;
+}
+
+function updatePlayers(players) {
+  const list = document.getElementById('playerList');
+  list.innerHTML = players.map(p => {
+    const hearts = p.alive ? '❤️'.repeat(p.lives) : '💀';
+    const isMe   = p.id === myId;
+    const betEl  = p.bet === '🔒' ? '<span class="pl-bet locked">🔒</span>'
+                 : p.bet === 'BUY'  ? '<span class="pl-bet buy">▲ BUY</span>'
+                 : p.bet === 'SELL' ? '<span class="pl-bet sell">▼ SELL</span>'
+                 : '';
+    return `<div class="pl-item ${isMe?'me':''} ${!p.alive?'eliminated':''}">
+      <div class="pl-hearts">${hearts}</div>
+      <div class="pl-name ${isMe?'me':''}">${p.name}${isMe?' (you)':''}</div>
+      <div class="pl-pts">${p.points}pt</div>
+      ${betEl}
+    </div>`;
+  }).join('');
+}
+
+function showBetButtons(enabled) {
+  const btns   = document.getElementById('betBtns');
+  const locked = document.getElementById('betLockedBadge');
+  btns.style.display   = enabled ? 'flex' : 'none';
+  locked.style.display = enabled ? 'none' : 'none';
+  if (enabled) {
+    document.getElementById('btnBuy').disabled  = false;
+    document.getElementById('btnSell').disabled = false;
+    document.getElementById('bpStatus').textContent = 'BUY or SELL — 7 seconds!';
+    document.getElementById('bpStatus').className   = 'bp-status';
+    betLocked = false; myBet = null;
+  } else {
+    document.getElementById('bpStatus').textContent = gamePhase === 'watching' ? 'Watching price...' : 'Waiting...';
+  }
+}
+
+function showLockedBadge(bet) {
+  document.getElementById('btnBuy').disabled  = true;
+  document.getElementById('btnSell').disabled = true;
+  const status = document.getElementById('bpStatus');
+  status.textContent = '🔒 Bet locked: ' + bet;
+  status.className   = 'bp-status locked';
+}
+
+function startTimer(secs, label) {
+  clearCountdown();
+  timerSecs = secs;
+  const el  = document.getElementById('tbTimer');
+  el.textContent = timerSecs;
+  timerInterval = setInterval(() => {
+    timerSecs--;
+    el.textContent = timerSecs;
+    if (timerSecs <= 0) clearCountdown();
+  }, 1000);
+}
+
+function clearCountdown() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('tbTimer').textContent = '--';
+}
+
+function showResult(msg) {
+  const went  = msg.went;
+  const diff  = msg.diff;
+  const isUp  = went === 'BUY';
+  const myRes = myBet === null ? 'abstain' : myBet === went ? 'correct' : 'wrong';
+
+  document.getElementById('roIcon').textContent  = isUp ? '📈' : '📉';
+  document.getElementById('roTitle').textContent = isUp ? 'BTC WENT UP ▲' : 'BTC WENT DOWN ▼';
+  document.getElementById('roTitle').className   = 'ro-title ' + (isUp ? 'bull' : 'bear');
+  document.getElementById('roStart').textContent = '$' + msg.start_price.toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('roEnd').textContent   = '$' + msg.end_price.toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('roDiff').textContent  = (diff >= 0 ? '+' : '') + '$' + diff.toFixed(2);
+  document.getElementById('roDiff').style.color  = diff >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const sub = myRes === 'correct' ? '✅ You were RIGHT! +20 points'
+            : myRes === 'wrong'   ? '❌ You were WRONG. -30 points, lose ❤️'
+            : '⚠️ You didn\'t bet. -20 points, lose ❤️';
+  document.getElementById('roSub').textContent = sub;
+  document.getElementById('resultOverlay').classList.add('show');
+
+  setTimeout(() => hideResultOverlay(), 4500);
+}
+
+function hideResultOverlay() {
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+function showWinner(msg) {
+  document.getElementById('woName').textContent = msg.winner.name + ' — ' + msg.winner.points + ' pts';
+  if (msg.tx_hash) {
+    document.getElementById('woChain').textContent   = '⛓️ Recorded on GenLayer ✓';
+    document.getElementById('woHash').textContent    = 'TX: ' + msg.tx_hash;
+  } else {
+    document.getElementById('woChain').textContent   = 'GenLayer: recording...';
+    document.getElementById('woHash').textContent    = '';
+  }
+  const lb = document.getElementById('woLbList');
+  lb.innerHTML = msg.leaderboard.slice(0, 5).map((p, i) => {
+    const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+    return `<div class="wo-lb-item">
+      <div class="wo-rank">${medals[i]||''}</div>
+      <div class="wo-pname">${p.name}</div>
+      <div class="wo-pts">${p.points} pts</div>
+    </div>`;
+  }).join('');
+  document.getElementById('winnerOverlay').classList.add('show');
+}
+
+// ── CHAT ──────────────────────────────────────
+function addChat(name, text, isMe = false) {
+  const msgs = document.getElementById('chatMsgs');
+  const div  = document.createElement('div');
+  div.className = 'cm-item';
+  div.innerHTML = `<span class="cm-name ${isMe?'me':''}">${name}:</span> ${escHtml(text)}`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addSysChat(text) {
+  const msgs = document.getElementById('chatMsgs');
+  const div  = document.createElement('div');
+  div.className = 'cm-item';
+  div.innerHTML = `<span class="cm-sys">${text}</span>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── ACTIONS ───────────────────────────────────
+function createRoom() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { toast('Enter your name', 'err'); return; }
+  myName = name;
+  const contract = document.getElementById('contractAddr').value.trim();
+  connect(() => wsSend({ type: 'create_room', name, contract }));
+}
+
+function joinRoom() {
+  const name = document.getElementById('playerName').value.trim();
+  const code = document.getElementById('roomCode').value.trim().toUpperCase();
+  if (!name) { toast('Enter your name', 'err'); return; }
+  if (!code || code.length !== 4) { toast('Enter 4-letter room code', 'err'); return; }
+  myName = name;
+  document.getElementById('lobbyErr').style.display = 'none';
+  connect(() => wsSend({ type: 'join_room', name, code }));
+}
+
+function startGame() {
+  wsSend({ type: 'start_game' });
+}
+
+function placeBet(bet) {
+  if (betLocked || gamePhase !== 'betting') return;
+  wsSend({ type: 'place_bet', bet });
+}
+
+function sendChat() {
+  const inp  = document.getElementById('chatInp');
+  const text = inp.value.trim();
+  if (!text) return;
+  wsSend({ type: 'chat', text });
+  inp.value = '';
+}
+
+function playAgain() {
+  document.getElementById('winnerOverlay').classList.remove('show');
+  showScreen('screenLobby');
+  if (ws) { ws.close(); ws = null; }
+}
+
+// ── TOAST ─────────────────────────────────────
+function toast(msg, type='ok') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// Init chart on load
+window.onload = () => { setTimeout(resizeChart, 100); };
+</script>
+</body>
+</html>
