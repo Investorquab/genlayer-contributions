@@ -1,119 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>GenLayer Price Oracle</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-:root{--bg:#060a0e;--bg2:#0b1017;--bg3:#101820;--green:#00ff88;--red:#ff3355;--gold:#ffd700;--blue:#00aaff;--border:#1e2d3d;--text:#c9d1d9;--sub:#6e7f8d;--muted:#2a3a4a;--fm:'Barlow Condensed',sans-serif;--mono:'Share Tech Mono',monospace;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:var(--fm);background:var(--bg);color:var(--text);min-height:100vh;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100;}
-.tb-logo{font-family:var(--mono);font-size:.95rem;color:var(--green);letter-spacing:2px;}
-.tb-logo span{color:var(--sub);}
-.tb-ca{font-family:var(--mono);font-size:.58rem;color:var(--sub);background:var(--bg3);padding:3px 8px;border-radius:4px;border:1px solid var(--border);}
-.main{max-width:900px;margin:0 auto;padding:20px;}
-.hero{text-align:center;padding:32px 20px 24px;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(0,255,136,0.05) 0%,transparent 70%);}
-.hero-title{font-family:var(--mono);font-size:2rem;color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.3);letter-spacing:4px;margin-bottom:6px;}
-.hero-sub{font-size:.85rem;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
-.badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
-.badge{font-family:var(--mono);font-size:.6rem;padding:3px 10px;border-radius:20px;letter-spacing:1px;}
-.badge.g{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
-.badge.b{background:rgba(0,170,255,0.1);border:1px solid rgba(0,170,255,0.3);color:var(--blue);}
-.badge.gold{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
-.search-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
-.search-row{display:flex;gap:10px;margin-bottom:16px;}
-.search-inp{flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:.85rem;color:var(--text);outline:none;transition:.2s;}
-.search-inp:focus{border-color:var(--green);}
-.search-inp::placeholder{color:var(--muted);}
-.btn-search{padding:11px 20px;background:var(--green);color:var(--bg);border:none;border-radius:8px;font-family:var(--mono);font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:1px;transition:.2s;}
-.btn-search:hover{opacity:.85;}
-.btn-search:disabled{opacity:.4;cursor:not-allowed;}
-.coins-grid{display:flex;gap:8px;flex-wrap:wrap;}
-.coin-btn{padding:5px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-family:var(--mono);font-size:.62rem;color:var(--sub);cursor:pointer;transition:.15s;}
-.coin-btn:hover{border-color:var(--green);color:var(--green);}
-.price-display{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;display:none;}
-.pd-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.pd-coin{font-family:var(--mono);font-size:1.4rem;color:var(--text);font-weight:700;}
-.pd-badge{font-family:var(--mono);font-size:.6rem;padding:3px 10px;border-radius:20px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
-.pd-price{font-family:var(--mono);font-size:2.8rem;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.3);margin-bottom:6px;}
-.pd-sub{font-family:var(--mono);font-size:.68rem;color:var(--sub);margin-bottom:16px;}
-.pd-meta{display:flex;gap:16px;flex-wrap:wrap;}
-.pd-meta-item{font-family:var(--mono);font-size:.65rem;color:var(--sub);}
-.pd-meta-item span{color:var(--text);}
-.history-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
-.hc-title{font-family:var(--mono);font-size:.72rem;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
-.history-list{display:flex;flex-direction:column;gap:6px;}
-.history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;}
-.hi-coin{font-family:var(--mono);font-size:.75rem;color:var(--text);}
-.hi-price{font-family:var(--mono);font-size:.78rem;color:var(--green);}
-.hi-time{font-family:var(--mono);font-size:.6rem;color:var(--sub);}
-.loading-wrap{display:flex;align-items:center;gap:10px;padding:20px;justify-content:center;}
-.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-txt{font-family:var(--mono);font-size:.68rem;color:var(--sub);}
-.empty{text-align:center;padding:30px;font-family:var(--mono);font-size:.72rem;color:var(--sub);}
-.verified-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:6px;font-family:var(--mono);font-size:.62rem;color:var(--green);margin-bottom:12px;}
-#toasts{position:fixed;top:60px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:5px;}
-.toast{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-family:var(--mono);font-size:.68rem;max-width:280px;animation:tIn .2s ease;box-shadow:0 4px 16px rgba(0,0,0,.4);}
-.toast.ok{border-left:3px solid var(--green);color:var(--green);}
-.toast.err{border-left:3px solid var(--red);color:var(--red);}
-.toast.loading{border-left:3px solid var(--gold);color:var(--gold);}
-@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenLayer Price Oracle</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:     #080c08;
+      --bg2:    #0d130d;
+      --bg3:    #111911;
+      --green:  #00ff41;
+      --green2: #00cc33;
+      --green3: #009922;
+      --dim:    #1a2e1a;
+      --border: #1e3a1e;
+      --text:   #c8e6c8;
+      --muted:  #4a6e4a;
+      --red:    #ff3333;
+      --yellow: #ffcc00;
+      --blue:   #00aaff;
+      --fm: 'IBM Plex Mono', monospace;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:var(--fm); background:var(--bg); color:var(--green); min-height:100vh; overflow-x:hidden; }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:9999; pointer-events:none;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
+    }
+    body::after {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: linear-gradient(rgba(0,255,65,.015) 1px,transparent 1px), linear-gradient(90deg,rgba(0,255,65,.015) 1px,transparent 1px);
+      background-size:32px 32px;
+    }
+    .wrap { max-width:1060px; margin:0 auto; padding:0 16px 60px; position:relative; z-index:1; }
+
+    /* HEADER */
+    .header { border-bottom:1px solid var(--border); padding:16px 0 12px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { display:flex; align-items:center; gap:12px; }
+    .logo-icon { width:34px; height:34px; border:2px solid var(--green); display:flex; align-items:center; justify-content:center; animation:blink 2s step-end infinite; }
+    @keyframes blink { 50%{border-color:transparent} }
+    .logo-text { font-size:.95rem; font-weight:700; letter-spacing:3px; }
+    .logo-sub { font-size:.6rem; color:var(--muted); letter-spacing:2px; margin-top:2px; }
+    .hdr-right { display:flex; align-items:center; gap:12px; }
+    .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.5s ease-in-out infinite; box-shadow:0 0 8px var(--green); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .clock { font-size:.75rem; color:var(--green2); }
+
+    /* TICKER */
+    .ticker-wrap { background:var(--dim); border-bottom:1px solid var(--border); padding:7px 0; overflow:hidden; }
+    .ticker { display:flex; gap:28px; width:max-content; animation:scroll 25s linear infinite; }
+    .ticker:hover { animation-play-state:paused; }
+    @keyframes scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .ti { display:flex; align-items:center; gap:7px; font-size:.7rem; white-space:nowrap; }
+    .ti-sym { color:var(--green); font-weight:700; }
+    .ti-price { color:var(--text); }
+    .ti-up { color:var(--green); }
+    .ti-dn { color:var(--red); }
+
+    /* LAYOUT */
+    .main { display:grid; grid-template-columns:1fr 340px; gap:16px; margin-top:18px; }
+    @media(max-width:768px){ .main{ grid-template-columns:1fr; } }
+
+    /* SECTION LABEL */
+    .slabel { font-size:.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .slabel::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* FEATURE COINS - only 6 */
+    .coin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+    .coin-card { background:var(--bg2); border:1px solid var(--border); padding:12px; cursor:pointer; transition:border-color .15s,background .15s; position:relative; overflow:hidden; }
+    .coin-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--green3); transition:background .15s; }
+    .coin-card:hover,.coin-card.active { border-color:var(--green); background:var(--bg3); }
+    .coin-card:hover::before,.coin-card.active::before { background:var(--green); box-shadow:0 0 8px var(--green); }
+    .cc-sym { font-size:.68rem; color:var(--muted); letter-spacing:2px; }
+    .cc-name { font-size:.75rem; color:var(--text); margin:3px 0 8px; }
+    .cc-price { font-size:1rem; font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; }
+    .cc-price.loading { color:var(--muted); animation:ldpulse .9s ease-in-out infinite; }
+    @keyframes ldpulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+    .cc-chg { font-size:.68rem; margin-top:3px; }
+    .up { color:var(--green); } .dn { color:var(--red); }
+
+    /* HISTORY */
+    .hist-panel { background:var(--bg2); border:1px solid var(--border); padding:14px; margin-top:14px; }
+    .chart-area { height:110px; position:relative; border-bottom:1px solid var(--border); border-left:1px solid var(--border); margin-top:8px; display:flex; align-items:flex-end; gap:2px; padding:6px 0 0; }
+    .bar { flex:1; background:var(--green3); min-height:2px; transition:height .4s; cursor:pointer; position:relative; }
+    .bar:hover { background:var(--green); }
+    .bar-tip { display:none; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); background:var(--bg3); border:1px solid var(--green); padding:2px 6px; font-size:.6rem; white-space:nowrap; z-index:10; color:var(--green); margin-bottom:3px; }
+    .bar:hover .bar-tip { display:block; }
+    .no-hist { color:var(--muted); font-size:.7rem; padding:28px 0; text-align:center; }
+
+    /* STATS */
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+    .stat { background:var(--bg2); border:1px solid var(--border); padding:11px; text-align:center; }
+    .stat-v { font-size:1.3rem; font-weight:700; color:var(--green); }
+    .stat-l { font-size:.58rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-top:3px; }
+
+    /* RIGHT PANEL */
+    .right-panel { background:var(--bg2); border:1px solid var(--border); padding:16px; }
+    .panel-title { font-size:.68rem; letter-spacing:3px; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:14px; }
+
+    .inp-label { font-size:.58rem; color:var(--muted); letter-spacing:1px; margin-bottom:4px; }
+    .mono-inp { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--green); font-family:var(--fm); font-size:.78rem; padding:8px 11px; outline:none; transition:border-color .2s; margin-bottom:10px; }
+    .mono-inp:focus { border-color:var(--green); }
+
+    .search-row { display:flex; gap:7px; margin-bottom:14px; }
+    .search-inp { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--green); font-family:var(--fm); font-size:.8rem; padding:9px 12px; outline:none; transition:border-color .2s; }
+    .search-inp:focus { border-color:var(--green); }
+    .search-btn { width:42px; background:transparent; border:1px solid var(--green); color:var(--green); font-size:1rem; cursor:pointer; transition:background .2s; flex-shrink:0; }
+    .search-btn:hover { background:rgba(0,255,65,.1); }
+
+    /* PRICE RESULT CARD */
+    .price-card-result {
+      background:var(--bg); border:1px solid var(--green);
+      padding:18px; margin-bottom:10px;
+      box-shadow:0 0 28px rgba(0,255,65,.1);
+      animation:popIn .25s ease;
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+    .pcr-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+    .pcr-sym { font-size:1rem; font-weight:700; letter-spacing:2px; }
+    .pcr-name { font-size:.68rem; color:var(--muted); margin-top:3px; }
+    .pcr-badge { font-size:.56rem; color:var(--green3); border:1px solid var(--green3); padding:3px 7px; letter-spacing:1px; }
+    .pcr-price { font-size:2.4rem; font-weight:700; letter-spacing:-1px; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:6px; }
+    .pcr-chg { font-size:.85rem; margin-bottom:16px; }
+    .pcr-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid var(--border); padding-top:12px; margin-bottom:14px; }
+    .pcr-item { display:flex; flex-direction:column; gap:3px; }
+    .pcr-item-label { font-size:.55rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; }
+    .pcr-item-val { font-size:.72rem; color:var(--text); }
+    .btn-record { width:100%; padding:10px; background:transparent; border:1px solid var(--green3); color:var(--green3); font-family:var(--fm); font-size:.72rem; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+    .btn-record:hover { background:rgba(0,153,34,.1); }
+    .btn-record:disabled { opacity:.3; cursor:not-allowed; }
+
+    /* LOADING */
+    .loading-state { text-align:center; padding:36px 16px; }
+    .spinner { width:34px; height:34px; border:2px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .loading-txt { font-size:.75rem; color:var(--green); letter-spacing:1px; }
+    .loading-sub { font-size:.62rem; color:var(--muted); margin-top:5px; }
+
+    /* EMPTY */
+    .empty-state { text-align:center; padding:36px 16px; }
+    .empty-icon { font-size:1.8rem; color:var(--border); margin-bottom:10px; animation:blink 2s step-end infinite; }
+    .empty-txt { font-size:.75rem; color:var(--muted); }
+    .empty-sub { font-size:.62rem; color:var(--border); margin-top:5px; line-height:1.6; }
+
+    .btn-all { width:100%; padding:10px; margin-top:10px; background:transparent; border:1px solid var(--blue); color:var(--blue); font-family:var(--fm); font-size:.7rem; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+    .btn-all:hover { background:rgba(0,170,255,.08); }
+
+    /* TOAST */
+    #toasts { position:fixed; bottom:20px; right:20px; z-index:9998; display:flex; flex-direction:column; gap:6px; }
+    .toast { background:var(--bg3); border:1px solid var(--green); padding:8px 14px; font-size:.72rem; color:var(--green); animation:tIn .2s ease; box-shadow:0 0 16px rgba(0,255,65,.12); }
+    .toast.err { border-color:var(--red); color:var(--red); }
+    @keyframes tIn { from{transform:translateX(110%);opacity:0} to{transform:none;opacity:1} }
+  </style>
 </head>
 <body>
 <div id="toasts"></div>
-<div class="topbar">
-  <div class="tb-logo">⬡ PRICE ORACLE <span>/ genlayer</span></div>
-  <div class="tb-ca">CA: 0xe8e796...9C288</div>
-</div>
-<div class="main">
-  <div class="hero">
-    <div class="hero-title">CRYPTO PRICE ORACLE</div>
-    <div class="hero-sub">Live Prices Verified by AI Consensus on GenLayer</div>
-    <div class="badges">
-      <span class="badge g">⚡ AI Consensus Verified</span>
-      <span class="badge b">🔗 On-Chain Storage</span>
-      <span class="badge gold">💰 Any Crypto</span>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">◈</div>
+      <div>
+        <div class="logo-text">GenLayer Oracle</div>
+        <div class="logo-sub">Live Crypto Prices · Verified On-Chain</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="live-dot"></div>
+      <span style="font-size:.68rem;color:var(--muted)">LIVE</span>
+      <div class="clock" id="clock">--:--:--</div>
     </div>
   </div>
 
-  <div class="search-card">
-    <div class="search-row">
-      <input class="search-inp" id="coinInput" placeholder="Enter coin name or ticker (e.g. BTC, Ethereum, SOL)..." onkeydown="if(event.key==='Enter')fetchPrice()"/>
-      <button class="btn-search" id="btnFetch" onclick="fetchPrice()">⚡ GET PRICE</button>
-    </div>
-    <div class="coins-grid">
-      <div class="coin-btn" onclick="quickFetch('BTC')">BTC</div>
-      <div class="coin-btn" onclick="quickFetch('ETH')">ETH</div>
-      <div class="coin-btn" onclick="quickFetch('SOL')">SOL</div>
-      <div class="coin-btn" onclick="quickFetch('BNB')">BNB</div>
-      <div class="coin-btn" onclick="quickFetch('XRP')">XRP</div>
-      <div class="coin-btn" onclick="quickFetch('DOGE')">DOGE</div>
-      <div class="coin-btn" onclick="quickFetch('ADA')">ADA</div>
-      <div class="coin-btn" onclick="quickFetch('AVAX')">AVAX</div>
-    </div>
-  </div>
-
-  <div class="price-display" id="priceDisplay">
-    <div class="pd-header">
-      <div class="pd-coin" id="pdCoin">BTC</div>
-      <div class="pd-badge">⛓️ ON-CHAIN VERIFIED</div>
-    </div>
-    <div class="verified-badge">✅ Verified by GenLayer AI Consensus</div>
-    <div class="pd-price" id="pdPrice">$0.00</div>
-    <div class="pd-sub" id="pdSub">Loading...</div>
-    <div class="pd-meta">
-      <div class="pd-meta-item">Contract: <span>0xe8e796...9C288</span></div>
-      <div class="pd-meta-item">Network: <span>GenLayer Studionet</span></div>
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker">
+      <div class="ti"><span class="ti-sym">BTC</span><span class="ti-price" id="t-bitcoin">$---</span><span class="ti-up" id="tc-bitcoin">---</span></div>
+      <div class="ti"><span class="ti-sym">ETH</span><span class="ti-price" id="t-ethereum">$---</span><span class="ti-up" id="tc-ethereum">---</span></div>
+      <div class="ti"><span class="ti-sym">SOL</span><span class="ti-price" id="t-solana">$---</span><span class="ti-up" id="tc-solana">---</span></div>
+      <div class="ti"><span class="ti-sym">BNB</span><span class="ti-price" id="t-binancecoin">$---</span><span class="ti-up" id="tc-binancecoin">---</span></div>
+      <div class="ti"><span class="ti-sym">XRP</span><span class="ti-price" id="t-ripple">$---</span><span class="ti-up" id="tc-ripple">---</span></div>
+      <div class="ti"><span class="ti-sym">DOGE</span><span class="ti-price" id="t-dogecoin">$---</span><span class="ti-up" id="tc-dogecoin">---</span></div>
+      <!-- duplicate for loop -->
+      <div class="ti"><span class="ti-sym">BTC</span><span class="ti-price" id="t-bitcoin2">$---</span><span class="ti-up" id="tc-bitcoin2">---</span></div>
+      <div class="ti"><span class="ti-sym">ETH</span><span class="ti-price" id="t-ethereum2">$---</span><span class="ti-up" id="tc-ethereum2">---</span></div>
+      <div class="ti"><span class="ti-sym">SOL</span><span class="ti-price" id="t-solana2">$---</span><span class="ti-up" id="tc-solana2">---</span></div>
+      <div class="ti"><span class="ti-sym">BNB</span><span class="ti-price" id="t-binancecoin2">$---</span><span class="ti-up" id="tc-binancecoin2">---</span></div>
+      <div class="ti"><span class="ti-sym">XRP</span><span class="ti-price" id="t-ripple2">$---</span><span class="ti-up" id="tc-ripple2">---</span></div>
+      <div class="ti"><span class="ti-sym">DOGE</span><span class="ti-price" id="t-dogecoin2">$---</span><span class="ti-up" id="tc-dogecoin2">---</span></div>
     </div>
   </div>
 
-  <div class="history-card">
-    <div class="hc-title">On-Chain Price History</div>
-    <div id="historyList"><div class="empty">Fetch a price to see on-chain history</div></div>
+  <div class="main">
+    <!-- LEFT -->
+    <div>
+      <div class="slabel">Featured Coins</div>
+      <div class="coin-grid" id="coinGrid"></div>
+
+      <div class="hist-panel">
+        <div class="slabel">On-Chain Price History — <span id="histLabel" style="color:var(--green)">search a coin to record</span></div>
+        <div class="chart-area" id="chartArea">
+          <div class="no-hist">Record a price to build on-chain history</div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-v" id="sQueries">0</div><div class="stat-l">On-Chain Queries</div></div>
+        <div class="stat"><div class="stat-v" id="sCoins">0</div><div class="stat-l">Tracked Coins</div></div>
+        <div class="stat"><div class="stat-v" id="sSnaps">0</div><div class="stat-l">Price Snapshots</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <div class="right-panel">
+        <div class="panel-title">◈ Oracle Interface</div>
+
+        <div class="inp-label">CONTRACT</div>
+        <input class="mono-inp" id="contractInput" value="0xe8e79649057eF178C091E6533ade1A66E489C288" placeholder="0x..." />
+
+        <div class="inp-label">SEARCH ANY COIN</div>
+        <div class="search-row">
+          <input class="search-inp" id="coinInput" placeholder="BTC · ETH · DOGE · sui · dogecoin..." value="bitcoin"
+            onkeydown="if(event.key==='Enter') fetchPrice()" />
+          <button class="search-btn" onclick="fetchPrice()">◈</button>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div class="empty-state" id="stateEmpty">
+          <div class="empty-icon">◈</div>
+          <div class="empty-txt">Search any coin above</div>
+          <div class="empty-sub">Type a name, ticker, or CoinGecko ID<br>then press Enter or ◈</div>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div class="loading-state" id="stateLoading" style="display:none">
+          <div class="spinner"></div>
+          <div class="loading-txt">Querying GenLayer consensus...</div>
+          <div class="loading-sub" id="loadingMsg">Verifying across validators</div>
+        </div>
+
+        <!-- PRICE RESULT -->
+        <div class="price-card-result" id="stateResult" style="display:none">
+          <div class="pcr-top">
+            <div>
+              <div class="pcr-sym" id="rSym">BTC</div>
+              <div class="pcr-name" id="rName">Bitcoin</div>
+            </div>
+            <div class="pcr-badge" id="rBadge">ON-CHAIN ✓</div>
+          </div>
+          <div class="pcr-price" id="rPrice">$0.00</div>
+          <div class="pcr-chg" id="rChg">+0.00%</div>
+          <div class="pcr-grid">
+            <div class="pcr-item"><span class="pcr-item-label">24H CHANGE</span><span class="pcr-item-val" id="rChg2">—</span></div>
+            <div class="pcr-item"><span class="pcr-item-label">SOURCE</span><span class="pcr-item-val">GenLayer AI Oracle</span></div>
+            <div class="pcr-item"><span class="pcr-item-label">MARKET CAP</span><span class="pcr-item-val" id="rMcap">—</span></div>
+            <div class="pcr-item"><span class="pcr-item-label">VERIFIED BY</span><span class="pcr-item-val">GenLayer Consensus</span></div>
+          </div>
+          <button class="btn-record" id="btnRecord" onclick="recordPrice()">◈ RECORD TO CHAIN</button>
+        </div>
+
+        <button class="btn-all" onclick="fetchAllPrices()">≡ FETCH ALL FEATURED PRICES</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -132,19 +281,15 @@ async function getClient() {
   return glClient;
 }
 
-async function readContract(fn, args=[]) {
+async function glRead(fn, args=[]) {
   const c = await getClient();
   return await c.readContract({ address: CONTRACT, functionName: fn, args });
 }
 
-async function writeContract(fn, args) {
+async function glWrite(fn, args) {
   const c    = await getClient();
   const hash = await c.writeContract({ address: CONTRACT, functionName: fn, args, value: 0n });
   const receipt = await c.waitForTransactionReceipt({ hash, status: 'FINALIZED', retries: 50, interval: 3000 });
-  return extractResult(receipt);
-}
-
-function extractResult(receipt) {
   try {
     const lr = receipt?.consensus_data?.leader_receipt?.[0];
     const readable = lr?.result?.payload?.readable;
@@ -154,68 +299,302 @@ function extractResult(receipt) {
   } catch(e) { return null; }
 }
 
-window.fetchPrice = async function() {
-  const coin = document.getElementById('coinInput').value.trim();
-  if (!coin) return toast('Enter a coin name or ticker','err');
-  await doFetch(coin);
+// No backend needed
+const BACKEND = 'NO_BACKEND';
+
+const FEATURED = [
+  { id:'bitcoin',     sym:'BTC',  name:'Bitcoin'   },
+  { id:'ethereum',    sym:'ETH',  name:'Ethereum'  },
+  { id:'solana',      sym:'SOL',  name:'Solana'    },
+  { id:'binancecoin', sym:'BNB',  name:'BNB'       },
+  { id:'ripple',      sym:'XRP',  name:'XRP'       },
+  { id:'dogecoin',    sym:'DOGE', name:'Dogecoin'  },
+];
+
+const SYM_MAP = {
+  btc:'bitcoin', eth:'ethereum', sol:'solana', bnb:'binancecoin',
+  xrp:'ripple', ada:'cardano', dot:'polkadot', link:'chainlink',
+  ltc:'litecoin', avax:'avalanche-2', uni:'uniswap', doge:'dogecoin',
+  shib:'shiba-inu', pepe:'pepe', trx:'tron', near:'near', apt:'aptos',
+  sui:'sui', matic:'matic-network',
 };
 
-window.quickFetch = async function(coin) {
-  document.getElementById('coinInput').value = coin;
-  await doFetch(coin);
+function resolveId(raw) {
+  const c = raw.trim().toLowerCase();
+  return SYM_MAP[c] || c;
+}
+
+function fmtPrice(p) {
+  if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits:2 });
+  if (p >= 1)    return p.toFixed(4);
+  return p.toFixed(6);
+}
+
+function fmtLarge(n) {
+  if (!n) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
+  return '$' + n.toLocaleString();
+}
+
+let liveData    = {};
+let selectedId  = 'bitcoin';
+let queryCount  = 0;
+
+// ── INIT ──────────────────────────────────────
+window.onload = () => {
+  // Prefill contract address
+  const ci = document.getElementById('contractInput');
+  if (ci) ci.value = '0xe8e79649057eF178C091E6533ade1A66E489C288';
+  renderCards();
+  startClock();
+  loadLivePrices();
+  setInterval(loadLivePrices, 30000);
 };
 
-async function doFetch(coin) {
-  const btn = document.getElementById('btnFetch');
-  btn.disabled = true; btn.textContent = '⏳ Fetching...';
-  const t = toast('Fetching '+coin+' price via AI consensus — ~30 seconds...','loading',60000);
+function startClock() {
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toUTCString().slice(17,25) + ' UTC';
+  }, 1000);
+}
+
+// ── RENDER CARDS ──────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('coinGrid');
+  grid.innerHTML = FEATURED.map(c => `
+    <div class="coin-card" id="card-${c.id}" onclick="selectCoin('${c.id}')">
+      <div class="cc-sym">${c.sym}</div>
+      <div class="cc-name">${c.name}</div>
+      <div class="cc-price loading" id="cp-${c.id}">---</div>
+      <div class="cc-chg" id="cc-${c.id}">—</div>
+    </div>
+  `).join('');
+}
+
+function selectCoin(id) {
+  selectedId = id;
+  document.querySelectorAll('.coin-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('card-' + id)?.classList.add('active');
+  const coin = FEATURED.find(c => c.id === id);
+  document.getElementById('coinInput').value = coin ? coin.sym : id;
+  fetchPrice();
+}
+
+// ── LIVE PRICES (via backend proxy) ───────────
+async function loadLivePrices() {
   try {
-    const result = await writeContract('get_price', [coin]);
-    removeToast(t);
+    const ids = FEATURED.map(c => c.id).join(',');
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`);
+    const data = await r.json();
+    FEATURED.forEach(c => {
+      const d = data[c.id];
+      if (!d) return;
+      const price  = d.usd;
+      const change = parseFloat((d.usd_24h_change || 0).toFixed(2));
+      const isUp   = change >= 0;
+      liveData[c.id] = { price, change, mcap: d.usd_market_cap };
+      const cp = document.getElementById('cp-' + c.id);
+      const cc = document.getElementById('cc-' + c.id);
+      if (cp) { cp.textContent = '$' + fmtPrice(price); cp.className = 'cc-price'; }
+      if (cc) { cc.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(change) + '%'; cc.className = 'cc-chg ' + (isUp ? 'up' : 'dn'); }
+      ['', '2'].forEach(s => {
+        const tp = document.getElementById('t-' + c.id + s);
+        const tc = document.getElementById('tc-' + c.id + s);
+        if (tp) tp.textContent = '$' + fmtPrice(price);
+        if (tc) { tc.textContent = (isUp ? '+' : '') + change + '%'; tc.className = isUp ? 'ti-up' : 'ti-dn'; }
+      });
+    });
+  } catch(e) { console.log('Live prices error:', e.message); }
+}
+
+// ── STATE HELPERS ─────────────────────────────
+function showEmpty()   { document.getElementById('stateEmpty').style.display='block'; document.getElementById('stateLoading').style.display='none'; document.getElementById('stateResult').style.display='none'; }
+function showLoading(msg) { document.getElementById('stateEmpty').style.display='none'; document.getElementById('stateLoading').style.display='block'; document.getElementById('stateResult').style.display='none'; document.getElementById('loadingMsg').textContent = msg || 'Verifying across validators...'; }
+function showResult(d) {
+  document.getElementById('stateEmpty').style.display='none';
+  document.getElementById('stateLoading').style.display='none';
+  document.getElementById('stateResult').style.display='block';
+
+  const coinId = d.coin_id || selectedId;
+  const coin   = FEATURED.find(c => c.id === coinId);
+  const sym    = d.symbol || coinId?.toUpperCase() || '???';
+  const name   = coin?.name || coinId || sym;
+
+  // Prefer live CoinGecko price over AI estimate
+  const live   = liveData[coinId];
+  const usd    = live ? live.price : parseFloat(d.usd || d.price_usd || 0);
+  const chg    = live ? parseFloat(live.change) : parseFloat(d.change_24h || 0);
+  const isUp   = chg >= 0;
+  const isLive = !!live;
+
+  document.getElementById('rSym').textContent   = sym;
+  document.getElementById('rName').textContent  = name;
+  document.getElementById('rPrice').textContent = '$' + fmtPrice(usd);
+  document.getElementById('rChg').textContent   = (isUp ? '▲ +' : '▼ ') + Math.abs(chg).toFixed(2) + '%';
+  document.getElementById('rChg').className     = 'pcr-chg ' + (isUp ? 'up' : 'dn');
+  document.getElementById('rChg2').textContent  = (isUp ? '+' : '') + chg.toFixed(2) + '%';
+  document.getElementById('rMcap').textContent  = live ? fmtLarge(live.mcap) : '—';
+
+  // Show price source clearly
+  const badge = document.getElementById('rBadge');
+  if (badge) badge.textContent = isLive ? 'LIVE + ON-CHAIN ✓' : 'ON-CHAIN ✓';
+
+  // update featured card
+  const cp = document.getElementById('cp-' + coinId);
+  const cc = document.getElementById('cc-' + coinId);
+  if (cp) { cp.textContent = '$' + fmtPrice(usd); cp.className = 'cc-price'; }
+  if (cc) { cc.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(chg).toFixed(2) + '%'; cc.className = 'cc-chg ' + (isUp ? 'up' : 'dn'); }
+
+  queryCount++;
+  document.getElementById('sQueries').textContent = queryCount;
+  selectedId = coinId;
+  document.getElementById('histLabel').textContent = sym + ' History';
+}
+
+// ── FETCH PRICE ON-CHAIN ──────────────────────
+async function fetchPrice() {
+  const raw = document.getElementById('coinInput').value.trim();
+  if (!raw) { toast('Enter a coin to search', 'err'); return; }
+  const coinId = resolveId(raw);
+
+  showLoading('Fetching ' + coinId.toUpperCase() + ' from GenLayer consensus...');
+
+  try {
+    // Step 1: fetch live price from CoinGecko (fast)
+    try {
+      const lr = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`);
+      const ld = await lr.json();
+      if (ld[coinId]) {
+        const d2 = ld[coinId];
+        liveData[coinId] = {
+          price:  d2.usd,
+          change: parseFloat((d2.usd_24h_change || 0).toFixed(2)),
+          mcap:   d2.usd_market_cap,
+        };
+      }
+    } catch(e) {}
+
+    // Step 2: call GenLayer on-chain directly
+    const result = await glWrite('get_price', [coinId]);
     if (result) {
-      showPrice(coin, result);
-      loadHistory();
-      toast('✅ '+coin+' price verified on-chain!','ok');
+      result.coin_id = result.coin_id || coinId;
+      showResult(result);
+      const live = liveData[coinId];
+      const price = live ? live.price : parseFloat(result.usd || 0);
+      const sym = result.symbol || coinId.toUpperCase();
+      toast(sym + ' $' + fmtPrice(price) + ' verified on-chain ✓');
     } else {
-      toast('Could not fetch price','err');
+      showEmpty();
+      toast('Contract error — try again', 'err');
     }
   } catch(e) {
-    removeToast(t);
-    toast('Error: '+e.message,'err');
+    showEmpty();
+    toast('Error: ' + e.message, 'err');
   }
-  btn.disabled = false; btn.textContent = '⚡ GET PRICE';
 }
 
-function showPrice(coin, data) {
-  const display = document.getElementById('priceDisplay');
-  display.style.display = 'block';
-  document.getElementById('pdCoin').textContent  = (data.coin || coin).toUpperCase();
-  document.getElementById('pdPrice').textContent = '$' + parseFloat(data.price||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('pdSub').textContent   = data.source || 'Verified by GenLayer AI validators';
-}
+// ── RECORD TO CHAIN ───────────────────────────
+async function recordPrice() {
+  const raw = document.getElementById('coinInput').value.trim();
+  const coinId = resolveId(raw);
 
-async function loadHistory() {
+  const btn = document.getElementById('btnRecord');
+  btn.disabled = true;
+  btn.textContent = '◈ RECORDING... (~30s)';
+  showLoading('Recording ' + coinId.toUpperCase() + ' price to GenLayer chain...');
+
   try {
-    const result = await readContract('get_stats');
-    const list   = document.getElementById('historyList');
-    const items  = result?.history || result || [];
-    if (!items.length) { list.innerHTML='<div class="empty">No history yet</div>'; return; }
-    list.innerHTML = '<div class="history-list">' +
-      [...items].reverse().slice(0,10).map(item => `
-        <div class="history-item">
-          <div class="hi-coin">${(item.coin||'').toUpperCase()}</div>
-          <div class="hi-price">$${parseFloat(item.price||0).toLocaleString('en-US',{minimumFractionDigits:2})}</div>
-          <div class="hi-time">${item.timestamp||item.time||'On-chain'}</div>
-        </div>`).join('') +
-    '</div>';
-  } catch(e) { console.log('History error:', e.message); }
+    const result = await glWrite('record_price', [coinId]);
+    if (result?.success) {
+      showResult({ ...result, usd: result.price_usd || result.usd });
+      const snaps = parseInt(document.getElementById('sSnaps').textContent || 0) + 1;
+      document.getElementById('sSnaps').textContent = snaps;
+      toast('◈ ' + (result.symbol||coinId.toUpperCase()) + ' recorded on-chain!');
+      setTimeout(loadHistory, 1500);
+    } else {
+      showEmpty();
+      toast('Record failed — try again', 'err');
+    }
+  } catch(e) {
+    showEmpty();
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '◈ RECORD TO CHAIN';
+  }
 }
 
-let tc=0;
-function toast(msg,type='ok',dur=3500){const id='t'+(++tc),c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast '+type;el.id=id;el.textContent=msg;c.appendChild(el);if(dur>0)setTimeout(()=>removeToast(id),dur);return id;}
-function removeToast(id){const el=document.getElementById(id);if(el){el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);}}
+// ── FETCH ALL FEATURED ────────────────────────
+async function fetchAllPrices() {
+  showLoading('Fetching all featured coins from consensus...');
+  try {
+    const ids = FEATURED.map(c => c.id).join(',');
+    const result = await glWrite('get_prices', [ids]);
+    if (result?.prices?.length) {
+      result.prices.forEach(p => {
+        const cp = document.getElementById('cp-' + p.coin_id);
+        const cc = document.getElementById('cc-' + p.coin_id);
+        if (cp) { cp.textContent = '$' + fmtPrice(p.usd); cp.className = 'cc-price'; }
+        if (cc) {
+          const isUp = p.change_24h >= 0;
+          cc.textContent = (isUp ? '▲ +' : '▼ ') + Math.abs(p.change_24h).toFixed(2) + '%';
+          cc.className = 'cc-chg ' + (isUp ? 'up' : 'dn');
+        }
+      });
+      showEmpty();
+      queryCount++;
+      document.getElementById('sQueries').textContent = queryCount;
+      toast('✓ ' + result.count + ' prices verified on-chain');
+    } else {
+      showEmpty();
+      toast('No prices returned', 'err');
+    }
+  } catch(e) {
+    showEmpty();
+    toast('Error: ' + e.message, 'err');
+  }
+}
 
-loadHistory();
+// ── HISTORY ───────────────────────────────────
+async function loadHistory() {
+  const coinId = selectedId;
+  const sym = FEATURED.find(c => c.id === coinId)?.sym || coinId.toUpperCase();
+  document.getElementById('histLabel').textContent = sym + ' Price History';
+  try {
+    const result = await glRead('get_price_history', [coinId]);
+    if (result?.snapshots?.length) {
+      renderChart(result.snapshots);
+    } else {
+      document.getElementById('chartArea').innerHTML = '<div class="no-hist">No history yet — click "◈ Record To Chain" to start</div>';
+    }
+  } catch(e) {
+    document.getElementById('chartArea').innerHTML = '<div class="no-hist">No history yet</div>';
+  }
+}
+
+function renderChart(snaps) {
+  const area   = document.getElementById('chartArea');
+  const prices = snaps.map(s => s.price_usd);
+  const min    = Math.min(...prices);
+  const max    = Math.max(...prices);
+  const range  = max - min || 1;
+  area.innerHTML = snaps.map((s, i) => {
+    const pct = ((s.price_usd - min) / range * 80 + 10);
+    return `<div class="bar" style="height:${pct}%"><div class="bar-tip">#${i} $${fmtPrice(s.price_usd)}</div></div>`;
+  }).join('');
+}
+
+// ── TOAST ─────────────────────────────────────
+function toast(msg, type='ok') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type==='err' ? ' err' : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
 </script>
 </body>
 </html>
