@@ -170,7 +170,7 @@ async function doFetch(coin) {
   btn.disabled = true; btn.textContent = '⏳ Fetching...';
   const t = toast('Fetching '+coin+' price via AI consensus — ~30 seconds...','loading',60000);
   try {
-    const result = await writeContract('update_price', [coin]);
+    const result = await writeContract('get_price', [coin]);
     removeToast(t);
     if (result) {
       showPrice(coin, result);
@@ -196,7 +196,7 @@ function showPrice(coin, data) {
 
 async function loadHistory() {
   try {
-    const result = await readContract('get_history');
+    const result = await readContract('get_stats');
     const list   = document.getElementById('historyList');
     const items  = result?.history || result || [];
     if (!items.length) { list.innerHTML='<div class="empty">No history yet</div>'; return; }

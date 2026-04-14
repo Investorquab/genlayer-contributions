@@ -196,7 +196,7 @@ function showWeather(city, data) {
 
 async function loadHistory() {
   try {
-    const result = await readContract('get_history');
+    const result = await readContract('get_tracked_cities');
     const list   = document.getElementById('historyList');
     const items  = result?.history || result || [];
     if (!items.length) { list.innerHTML='<div class="empty">No history yet</div>'; return; }
